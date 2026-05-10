@@ -1,25 +1,25 @@
-# Practica 5: XAI - Partial Dependence Plots
+# Practice 5: XAI - Partial Dependence Plots
 
-Este repositorio contiene la solucion de la practica de metodos model-agnostic
-con Partial Dependence Plots (PDP).
+This repository contains the solution for the model-agnostic methods practice
+using Partial Dependence Plots (PDP).
 
-## Contenido
+## Contents
 
-- `XAI3.pdf`: enunciado original.
-- `day.csv` y `hour.csv`: datos de alquiler de bicicletas.
-- `kc_house_data.csv`: datos de precios de viviendas.
-- `Practica5_PDP.Rmd`: informe reproducible en R Markdown.
-- `Practica5_PDP.pdf`: informe final generado.
+- `XAI3.pdf`: original assignment statement.
+- `day.csv` and `hour.csv`: bike rental data.
+- `kc_house_data.csv`: house price data.
+- `Practica5_PDP.Rmd`: reproducible report in R Markdown.
+- `Practica5_PDP.pdf`: final generated report.
 
-## Requisitos
+## Requirements
 
-La practica esta preparada para ejecutarse con R 4.4.2. En este equipo R esta en:
+The practice is prepared to run with R 4.4.2. On this computer, R is located at:
 
 ```powershell
 C:\Program Files\R\R-4.4.2\bin\Rscript.exe
 ```
 
-Paquetes usados:
+Packages used:
 
 - `readr`
 - `dplyr`
@@ -30,20 +30,20 @@ Paquetes usados:
 - `rmarkdown`
 - `knitr`
 
-No se usa el paquete `pdp`; los PDP se calculan manualmente.
+The `pdp` package is not used; the PDP values are computed manually.
 
-## Como generar el informe
+## How to Generate the Report
 
-Desde esta carpeta:
+From this folder:
 
 ```powershell
 $env:RSTUDIO_PANDOC='C:\Program Files\RStudio\resources\app\bin\quarto\bin\tools'
 & 'C:\Program Files\R\R-4.4.2\bin\Rscript.exe' -e "rmarkdown::render('Practica5_PDP.Rmd', output_format='pdf_document')"
 ```
 
-El resultado es `Practica5_PDP.pdf`.
+The output is `Practica5_PDP.pdf`.
 
-## Entrega
+## Submission
 
-El entregable pedido por el enunciado es el enlace al repositorio de GitHub que
-contiene los datos, el codigo reproducible y el informe final en PDF.
+The deliverable requested in the assignment is the GitHub repository link. The
+repository contains the data, the reproducible code, and the final PDF report.

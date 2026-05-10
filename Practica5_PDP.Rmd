@@ -1,5 +1,5 @@
 ---
-title: "Practica 5: XAI - Partial Dependence Plots"
+title: "Practice 5: XAI - Partial Dependence Plots"
 author: "Andres Alvarruiz Lopez, Alejandro Legleye Enguix, Ferran Soler Martinez"
 date: "`r format(Sys.Date(), '%d/%m/%Y')`"
 output:
@@ -38,7 +38,7 @@ missing_packages <- required_packages[
 
 if (length(missing_packages) > 0) {
   stop(
-    "Faltan paquetes necesarios: ",
+    "Missing required packages: ",
     paste(missing_packages, collapse = ", ")
   )
 }
@@ -92,24 +92,25 @@ regular_grid <- function(x, n = 50, probs = c(0.01, 0.99)) {
 }
 ```
 
-# Introduccion
+# Introduction
 
-El objetivo de esta practica es aplicar metodos explicables independientes del
-modelo. En concreto, se usan Partial Dependence Plots (PDP) para analizar como
-cambia la prediccion media de un random forest cuando se fuerza una variable a
-tomar distintos valores.
+The objective of this practice is to apply model-agnostic explainability
+methods. Specifically, Partial Dependence Plots (PDP) are used to analyze how
+the average prediction of a random forest changes when one variable is forced to
+take different values.
 
-Un PDP no muestra una relacion causal: muestra la relacion aprendida por el
-modelo manteniendo el resto de variables segun la distribucion observada. Por
-eso es util para interpretar modelos no lineales, pero debe leerse como una
-explicacion del modelo y no como una ley directa del fenomeno real.
+A PDP does not show a causal relationship. It shows the relationship learned by
+the model while keeping the remaining variables distributed as observed in the
+data. For this reason, PDPs are useful for interpreting nonlinear models, but
+they should be read as explanations of the model rather than as direct laws of
+the real phenomenon.
 
 ```{r load-data}
 bike_raw <- read_csv("day.csv", show_col_types = FALSE)
 house_raw <- read_csv("kc_house_data.csv", show_col_types = FALSE)
 ```
 
-# PDP 1D: prediccion de alquileres de bicicletas
+# 1D PDP: Bike Rental Prediction
 
 ```{r bike-model}
 bike_data <- bike_raw %>%
@@ -156,29 +157,29 @@ bike_pdp <- bind_rows(
   mutate(
     variable_label = recode(
       variable,
-      instant = "Dias desde 2011",
-      temp = "Temperatura normalizada",
-      hum = "Humedad normalizada",
-      windspeed = "Viento normalizado"
+      instant = "Days since 2011",
+      temp = "Normalized temperature",
+      hum = "Normalized humidity",
+      windspeed = "Normalized wind speed"
     )
   )
 
 stopifnot(!anyNA(bike_pdp$prediction))
 ```
 
-Se ajusta un random forest de regresion para predecir `cnt`, el numero total de
-bicicletas alquiladas por dia. Se eliminan `casual` y `registered` porque son
-componentes directos de `cnt` y producirian fuga de informacion. La varianza
-explicada OOB aproximada del modelo es `r fmt_pct(bike_oob_r2)`.
+A regression random forest is fitted to predict `cnt`, the total number of bikes
+rented per day. The variables `casual` and `registered` are removed because they
+are direct components of `cnt` and would introduce data leakage. The approximate
+OOB explained variance of the model is `r fmt_pct(bike_oob_r2)`.
 
 ```{r bike-pdp-plot}
 ggplot(bike_pdp, aes(x = value, y = prediction)) +
   geom_line(color = "#1f6f8b", linewidth = 0.9) +
   facet_wrap(~ variable_label, scales = "free_x", ncol = 2) +
   labs(
-    title = "PDP 1D para el modelo de alquileres de bicicletas",
-    x = "Valor fijado de la variable",
-    y = "Prediccion media de cnt"
+    title = "1D PDP for the bike rental model",
+    x = "Fixed value of the variable",
+    y = "Average predicted cnt"
   ) +
   theme(
     plot.title = element_text(face = "bold"),
@@ -186,18 +187,18 @@ ggplot(bike_pdp, aes(x = value, y = prediction)) +
   )
 ```
 
-**Interpretacion.** El paso de los dias desde 2011 tiene un efecto creciente:
-el modelo aprende una tendencia temporal positiva, coherente con una mayor
-demanda en la segunda parte del periodo observado. La temperatura tambien tiene
-un efecto claramente positivo hasta valores medios-altos; con temperaturas mas
-agradables el modelo predice mas alquileres.
+**Interpretation.** The number of days since 2011 has an increasing effect: the
+model learns a positive time trend, consistent with higher demand in the second
+part of the observed period. Temperature also has a clearly positive effect up
+to medium-high values; with more pleasant temperatures, the model predicts more
+bike rentals.
 
-La humedad muestra el patron contrario: al aumentar, especialmente en niveles
-altos, la prediccion media de bicicletas baja. El viento tambien reduce la
-demanda predicha cuando alcanza valores altos, aunque su efecto es menos fuerte
-y mas irregular que el de la temperatura o la humedad.
+Humidity shows the opposite pattern: as humidity increases, especially at high
+levels, the average predicted number of bikes decreases. Wind speed also reduces
+predicted demand when it reaches high values, although its effect is weaker and
+more irregular than the effects of temperature or humidity.
 
-# PDP 2D: humedad y temperatura
+# 2D PDP: Humidity and Temperature
 
 ```{r bike-2d-data}
 bike_pdp_sample <- bike_x %>%
@@ -222,11 +223,11 @@ hum_step <- diff(range(hum_grid)) / (length(hum_grid) - 1)
 
 plot_2d <- ggplot(bike_pdp_2d, aes(x = value_x, y = value_y, fill = prediction)) +
   geom_tile(width = temp_step, height = hum_step) +
-  scale_fill_viridis_c(option = "C", name = "Prediccion\nmedia") +
+  scale_fill_viridis_c(option = "C", name = "Average\nprediction") +
   labs(
-    x = "Temperatura normalizada",
-    y = "Humedad normalizada",
-    title = "PDP 2D: temperatura y humedad"
+    x = "Normalized temperature",
+    y = "Normalized humidity",
+    title = "2D PDP: temperature and humidity"
   ) +
   theme(
     plot.title = element_text(face = "bold"),
@@ -235,7 +236,7 @@ plot_2d <- ggplot(bike_pdp_2d, aes(x = value_x, y = value_y, fill = prediction))
 
 temp_density <- ggplot(bike_pdp_sample, aes(x = temp)) +
   geom_density(fill = "#1f6f8b", alpha = 0.65, color = NA) +
-  labs(x = NULL, y = "Densidad") +
+  labs(x = NULL, y = "Density") +
   theme(
     axis.text.x = element_blank(),
     axis.title.y = element_text(size = 8),
@@ -245,7 +246,7 @@ temp_density <- ggplot(bike_pdp_sample, aes(x = temp)) +
 hum_density <- ggplot(bike_pdp_sample, aes(x = hum)) +
   geom_density(fill = "#b45f35", alpha = 0.65, color = NA) +
   coord_flip() +
-  labs(x = NULL, y = "Densidad") +
+  labs(x = NULL, y = "Density") +
   theme(
     axis.text.y = element_blank(),
     axis.title.y = element_text(size = 8),
@@ -255,9 +256,9 @@ hum_density <- ggplot(bike_pdp_sample, aes(x = hum)) +
 empty_plot <- ggplot() + theme_void()
 ```
 
-Para el PDP bidimensional se usa una muestra aleatoria de 500 observaciones,
-como indica el enunciado, y se calcula la prediccion media para cada combinacion
-de temperatura y humedad.
+For the two-dimensional PDP, a random sample of 500 observations is used, as
+requested in the assignment. The average prediction is computed for each
+combination of temperature and humidity values.
 
 ```{r bike-2d-plot, fig.width=7.4, fig.height=6.8}
 grid.arrange(
@@ -271,18 +272,18 @@ grid.arrange(
 )
 ```
 
-**Interpretacion.** La zona con mayor prediccion aparece con temperatura media o
-alta y humedad baja o moderada. Cuando la humedad es elevada, el numero predicho
-de alquileres cae incluso si la temperatura es favorable. Esto indica que el
-modelo no solo aprende efectos individuales, sino tambien una interaccion
-intuitiva: los dias calidos favorecen el alquiler, pero si van acompanados de
-mucha humedad la demanda esperada disminuye.
+**Interpretation.** The highest prediction area appears with medium or high
+temperature and low or moderate humidity. When humidity is high, the predicted
+number of rentals decreases even if the temperature is favorable. This indicates
+that the model learns not only individual effects, but also an intuitive
+interaction: warm days favor bike rental, but if they are accompanied by high
+humidity, the expected demand decreases.
 
-Las densidades marginales ayudan a distinguir donde hay datos reales. Las zonas
-del mapa con poca densidad deben interpretarse con mas cautela, porque el modelo
-esta extrapolando mas que en las regiones frecuentes.
+The marginal densities help identify where real observations are located. Areas
+of the map with low density should be interpreted more carefully, because the
+model is extrapolating more than in frequent regions of the data.
 
-# PDP: prediccion del precio de viviendas
+# PDP: House Price Prediction
 
 ```{r house-model}
 house_data <- house_raw %>%
@@ -338,22 +339,21 @@ house_pdp <- bind_rows(
   mutate(
     variable_label = recode(
       variable,
-      bedrooms = "Dormitorios",
-      bathrooms = "Banos",
-      sqft_living = "Superficie habitable",
-      floors = "Plantas"
+      bedrooms = "Bedrooms",
+      bathrooms = "Bathrooms",
+      sqft_living = "Living area",
+      floors = "Floors"
     )
   )
 
 stopifnot(!anyNA(house_pdp$prediction))
 ```
 
-Para el precio de las viviendas se entrena un random forest con las variables
-indicadas por el enunciado: `bedrooms`, `bathrooms`, `sqft_living`, `sqft_lot`,
-`floors` y `yr_built`. La varianza explicada OOB aproximada del modelo es
-`r fmt_pct(house_oob_r2)`. Para calcular los PDP se usa una muestra de 2000
-observaciones, reduciendo el coste computacional sin cambiar la logica del
-metodo.
+For house price prediction, a random forest is trained with the variables
+specified in the assignment: `bedrooms`, `bathrooms`, `sqft_living`, `sqft_lot`,
+`floors`, and `yr_built`. The approximate OOB explained variance of the model is
+`r fmt_pct(house_oob_r2)`. To compute the PDPs, a sample of 2000 observations is
+used, reducing the computational cost without changing the logic of the method.
 
 ```{r house-pdp-plot}
 ggplot(house_pdp, aes(x = value, y = prediction)) +
@@ -362,9 +362,9 @@ ggplot(house_pdp, aes(x = value, y = prediction)) +
   facet_wrap(~ variable_label, scales = "free_x", ncol = 2) +
   scale_y_continuous(labels = fmt_k) +
   labs(
-    title = "PDP 1D para el modelo de precios de vivienda",
-    x = "Valor fijado de la variable",
-    y = "Precio predicho medio"
+    title = "1D PDP for the house price model",
+    x = "Fixed value of the variable",
+    y = "Average predicted price"
   ) +
   theme(
     plot.title = element_text(face = "bold"),
@@ -372,28 +372,27 @@ ggplot(house_pdp, aes(x = value, y = prediction)) +
   )
 ```
 
-**Interpretacion.** La variable con efecto mas claro es `sqft_living`: a mayor
-superficie habitable, mayor precio predicho. Este patron es esperable porque el
-tamanio interior es una de las senales mas directas del valor de una vivienda.
+**Interpretation.** The variable with the clearest effect is `sqft_living`: as
+living area increases, the predicted price also increases. This pattern is
+expected because interior size is one of the most direct signals of a house's
+value.
 
-Los banos tambien incrementan el precio predicho, aunque con tramos de meseta.
-Esto sugiere que el modelo valora mas pasar de pocos banos a una dotacion media
-que anadir banos cuando la vivienda ya tiene varios. Los dormitorios muestran un
-efecto menos lineal: mas dormitorios no siempre implican mayor precio si no
-vienen acompanados de mas superficie u otras caracteristicas. Las plantas
-presentan un efecto moderado e irregular; el modelo parece asociarlas con cierto
-aumento de precio, pero no con una relacion tan fuerte como la superficie
-habitable.
+Bathrooms also increase the predicted price, although with plateau regions. This
+suggests that the model values the transition from few bathrooms to a medium
+number more than adding bathrooms when the house already has several. Bedrooms
+show a less linear effect: more bedrooms do not always imply a higher price if
+they are not accompanied by more living area or other characteristics. Floors
+have a moderate and irregular effect; the model seems to associate them with
+some increase in price, but not with a relationship as strong as living area.
 
-# Conclusiones
+# Conclusions
 
-Los PDP permiten resumir de forma visual la relacion aprendida por modelos de
-random forest. En el caso de las bicicletas, la temperatura y la tendencia
-temporal elevan la prediccion, mientras que humedad y viento altos la reducen.
-En el caso de las viviendas, la superficie habitable domina la explicacion del
-precio, seguida por los banos; dormitorios y plantas tienen efectos mas
-dependientes del contexto.
+PDPs make it possible to visually summarize the relationships learned by random
+forest models. In the bike rental case, temperature and the time trend increase
+the prediction, while high humidity and wind speed reduce it. In the house price
+case, living area dominates the explanation of price, followed by bathrooms;
+bedrooms and floors have more context-dependent effects.
 
-La principal precaucion es que los PDP promedian sobre todas las observaciones:
-si hay variables muy correlacionadas o zonas con pocos datos, la interpretacion
-debe hacerse con cautela.
+The main precaution is that PDPs average over all observations. If variables are
+highly correlated or some regions have few data points, the interpretation must
+be made with caution.
