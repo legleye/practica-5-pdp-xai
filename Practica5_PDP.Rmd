@@ -1,6 +1,6 @@
 ---
 title: "Practica 5: XAI - Partial Dependence Plots"
-author: "Alejandro Legleye"
+author: "Andres Alvarruiz Lopez, Alejandro Legleye Enguix, Ferran Soler Martinez"
 date: "`r format(Sys.Date(), '%d/%m/%Y')`"
 output:
   pdf_document:
